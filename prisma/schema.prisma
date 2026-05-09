@@ -4,17 +4,94 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  // output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  USER
+  CREATOR
+  ADMIN
+}
+
+enum VideoStatus {
+  PROCESSING
+  PUBLISHED
+  PRIVATE
+  BANNED
+}
+
 model User {
-  id   Int     @id @default(autoincrement())
-  name  String
-  email String  @unique
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+
+  role      UserRole @default(USER)
+
+  videos    Video[]
+  comments  Comment[]
+  likes     VideoLike[]
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Video {
+  id           String   @id @default(uuid())
+
+  title        String
+  slug         String   @unique
+
+  description  String?
+
+  videoUrl     String
+  thumbnailUrl String?
+
+  tags         String[]
+
+  views        Int @default(0)
+
+  status       VideoStatus @default(PROCESSING)
+
+  userId       String
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  comments     Comment[]
+  likes        VideoLike[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+
+  content   String
+
+  userId    String
+  videoId   String
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VideoLike {
+  id        String   @id @default(uuid())
+
+  userId    String
+  videoId   String
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, videoId])
 }
