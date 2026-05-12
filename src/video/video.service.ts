@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class VideoService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private storageService: StorageService,
+  ) { }
 
   async createVideo(file: Express.Multer.File, body: any, userId: string) {
     const { title, description, tags } = body;
@@ -14,7 +18,9 @@ export class VideoService {
       .replace(/[^\w ]+/g, '')
       .replace(/ +/g, '-');
 
-    const videoUrl = `/uploads/${file.filename}`;
+    // Upload to MinIO
+    const fileKey = await this.storageService.uploadFile(file);
+    const videoUrl = await this.storageService.getFileUrl(fileKey);
 
     return await this.prisma.video.create({
       data: {

@@ -11,8 +11,6 @@ import {
 } from '@nestjs/common';
 import { VideoService } from './video.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { AuthGuard } from '@nestjs/passport';
 import { type Request } from 'express';
 
@@ -24,13 +22,6 @@ export class VideoController {
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(
     FileInterceptor('video', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, callback) => {
-          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, uniqueName + extname(file.originalname));
-        },
-      }),
       fileFilter: (req, file, callback) => {
         if (!file.mimetype.startsWith('video/')) {
           return callback(new Error('Only video files are allowed'), false);
@@ -38,7 +29,7 @@ export class VideoController {
         callback(null, true);
       },
       limits: {
-        fileSize: 1024 * 1024 * 100, // 100MB
+        fileSize: 1024 * 1024 * 100, 
       },
     }),
   )
@@ -49,5 +40,15 @@ export class VideoController {
   ) {
     const user = req.user as any;
     return this.videoService.createVideo(file, body, user.userId);
+  }
+
+  @Get(':id')
+  async getVideo(@Param('id') id: string) {
+    return this.videoService.findOne(id)
+  }
+
+  @Get()
+  async getAllVideo(){
+    return await this.videoService.findAll();
   }
 }
