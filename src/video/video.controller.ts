@@ -8,6 +8,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Delete
 } from '@nestjs/common';
 import { VideoService } from './video.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -16,7 +17,7 @@ import { type Request } from 'express';
 
 @Controller('video')
 export class VideoController {
-  constructor(private readonly videoService: VideoService) {}
+  constructor(private readonly videoService: VideoService) { }
 
   @Post('upload')
   @UseGuards(AuthGuard('jwt'))
@@ -29,7 +30,7 @@ export class VideoController {
         callback(null, true);
       },
       limits: {
-        fileSize: 1024 * 1024 * 100, 
+        fileSize: 1024 * 1024 * 100,
       },
     }),
   )
@@ -48,7 +49,25 @@ export class VideoController {
   }
 
   @Get()
-  async getAllVideo(){
-    return await this.videoService.findAll();
+  async getAllVideo() {
+    const data = await this.videoService.findAll()
+
+    const total = data.length
+
+    return {
+      message: 'Success',
+      data,
+      total: total
+    }
+
+  }
+
+  @Delete(':id')
+  async deleteVideo(@Param('id') id: string) {
+    await this.videoService.deleteVideo(id)
+
+    return {
+      message: 'Video berhasil dihapus'
+    }
   }
 }

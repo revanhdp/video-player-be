@@ -61,4 +61,10 @@ export class VideoService {
       },
     });
   }
+
+  async deleteVideo(id: string) {
+    return await this.prisma.video.delete({
+      where: { id },
+    });
+  }
 }
