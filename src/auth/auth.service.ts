@@ -35,7 +35,7 @@ export class AuthService {
       },
     });
 
-    return this.getTokens(newUser.id, newUser.email);
+    return this.getTokens(newUser.id, newUser.email, newUser.role);
   }
 
   async login(dto: LoginDto) {
@@ -52,27 +52,32 @@ export class AuthService {
       throw new UnauthorizedException('Email atau Password salah');
     }
 
-    return this.getTokens(user.id, user.email);
+    return this.getTokens(user.id, user.email, user.role);
   }
 
   async logout(userId: string) {
-    // In a truly stateless JWT setup, logout is handled client-side
-    // by deleting the token. Server-side logout would require a blacklist.
     return { message: 'Logged out successfully' };
   }
 
   async refreshTokens(userId: string, email: string) {
-    // In a stateless setup, the refresh token itself contains the necessary info.
-    // If the RtStrategy has already validated the token, we can just issue new ones.
-    return this.getTokens(userId, email);
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('User tidak ditemukan');
+    }
+
+    return this.getTokens(userId, email, user.role);
   }
 
-  async getTokens(userId: string, email: string) {
+  async getTokens(userId: string, email: string, role: string) {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
         {
           sub: userId,
           email,
+          role,
         },
         {
           secret: process.env.JWT_ACCESS_SECRET || 'access-secret-key-123',

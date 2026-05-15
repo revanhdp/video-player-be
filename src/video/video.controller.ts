@@ -14,13 +14,17 @@ import { VideoService } from './video.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { type Request } from 'express';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @Controller('video')
 export class VideoController {
   constructor(private readonly videoService: VideoService) { }
 
   @Post('upload')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.USER, UserRole.CREATOR, UserRole.ADMIN)
   @UseInterceptors(
     FileInterceptor('video', {
       fileFilter: (req, file, callback) => {

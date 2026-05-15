@@ -39,7 +39,17 @@ services:
       /usr/bin/mc anonymous set public myminio/videos;
       exit 0;
       "
+  
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+    volumes:
+      - redis_data:/data
 
 volumes:
   postgres_data:
   minio_data:
+  redis_data:

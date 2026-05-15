@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { InjectQueue } from '@nestjs/bull';
+import type { Queue } from 'bull';
 
 @Injectable()
 export class VideoService {
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
+    @InjectQueue('video-processing') private videoQueue: Queue,
   ) { }
 
   async createVideo(file: Express.Multer.File, body: any, userId: string) {
@@ -22,7 +25,7 @@ export class VideoService {
     const fileKey = await this.storageService.uploadFile(file);
     const videoUrl = await this.storageService.getFileUrl(fileKey);
 
-    return await this.prisma.video.create({
+    const video = await this.prisma.video.create({
       data: {
         title,
         slug: `${slug}-${Date.now()}`,
@@ -32,6 +35,17 @@ export class VideoService {
         tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map((t: string) => t.trim())) : [],
       },
     });
+
+    // Add to processing queue
+    await this.videoQueue.add('process-video', {
+      videoId: video.id,
+      videoUrl: video.videoUrl,
+    }, 
+    {
+      attempts: 2,
+    });
+
+    return video;
   }
 
   async findAll() {
