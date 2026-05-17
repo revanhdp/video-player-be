@@ -9,6 +9,8 @@ import { VideoModule } from './video/video.module';
 
 import { ConfigModule } from '@nestjs/config';
 import { StorageModule } from './storage/storage.module';
+import { LikeModule } from './like/like.module';
+import { CommentModule } from './comment/comment.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { StorageModule } from './storage/storage.module';
     AuthModule,
     VideoModule,
     StorageModule,
+    LikeModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
