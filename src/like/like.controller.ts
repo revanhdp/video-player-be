@@ -1,4 +1,10 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Post } from '@nestjs/common';
+import { LikeService } from './like.service';
 
-@Controller('like')
-export class LikeController {}
+@Controller('video/like')
+export class LikeController {
+    // constructor(private readonly likeService: LikeService) {}
+
+    // @Post()
+    // async likeVideo
+}
