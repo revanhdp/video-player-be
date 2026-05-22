@@ -1,4 +1,4 @@
-import { Controller, Param, Post, Request, UseGuards, Get, Body } from '@nestjs/common';
+import { Controller, Param, Post, Request, UseGuards, Get, Body, Delete } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -18,9 +18,19 @@ export class CommentController {
 
     @Get('video/:videoId')
     async findAll(@Param('videoId') videoId: string) {
-        const data = this.commentService.findByVideo(videoId)
+        const data = await this.commentService.findByVideo(videoId)
         return {
             message: 'Comments fetched successfully',
+            data
+        }
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Delete(':id')
+    async deleteComment(@Param('id') id: string, @Request() req) {
+        const data = await this.commentService.deleteComment(id, req.user.userId);
+        return {
+            message: 'Comment deleted successfully',
             data
         }
     }
