@@ -8,7 +8,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
-  Delete
+  Delete,
 } from '@nestjs/common';
 import { VideoService } from './video.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -20,7 +20,7 @@ import { UserRole } from '@prisma/client';
 
 @Controller('video')
 export class VideoController {
-  constructor(private readonly videoService: VideoService) { }
+  constructor(private readonly videoService: VideoService) {}
 
   @Post('upload')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -49,29 +49,28 @@ export class VideoController {
 
   @Get(':id')
   async getVideo(@Param('id') id: string) {
-    return this.videoService.findOne(id)
+    return this.videoService.findOne(id);
   }
 
   @Get()
   async getAllVideo() {
-    const data = await this.videoService.findAll()
+    const data = await this.videoService.findAll();
 
-    const total = data.length
+    const total = data.length;
 
     return {
       message: 'Success',
       data,
-      total: total
-    }
-
+      total: total,
+    };
   }
 
   @Delete(':id')
   async deleteVideo(@Param('id') id: string) {
-    await this.videoService.deleteVideo(id)
+    await this.videoService.deleteVideo(id);
 
     return {
-      message: 'Video berhasil dihapus'
-    }
+      message: 'Video berhasil dihapus',
+    };
   }
 }

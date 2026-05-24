@@ -3,7 +3,7 @@ import { LikeService } from './like.service';
 import { LikeController } from './like.controller';
 
 @Module({
-    providers: [LikeService],
-    controllers: [LikeController]
+  providers: [LikeService],
+  controllers: [LikeController],
 })
-export class LikeModule { }
+export class LikeModule {}

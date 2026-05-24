@@ -8,13 +8,13 @@ import { VideoProcessor } from './video.processor';
 
 @Module({
   imports: [
-    PrismaModule, 
+    PrismaModule,
     StorageModule,
     BullModule.registerQueue({
       name: 'video-processing',
     }),
   ],
   controllers: [VideoController],
-  providers: [VideoService, VideoProcessor]
+  providers: [VideoService, VideoProcessor],
 })
 export class VideoModule {}

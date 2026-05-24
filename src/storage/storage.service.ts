@@ -1,6 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as fs from 'fs';
 
@@ -10,7 +14,8 @@ export class StorageService {
   private bucketName: string;
 
   constructor(private configService: ConfigService) {
-    const endpoint = this.configService.get<string>('MINIO_ENDPOINT') || 'localhost';
+    const endpoint =
+      this.configService.get<string>('MINIO_ENDPOINT') || 'localhost';
     const port = this.configService.get<number>('MINIO_PORT') || 9000;
 
     this.s3Client = new S3Client({
@@ -22,10 +27,14 @@ export class StorageService {
         secretAccessKey: this.configService.get<string>('MINIO_SECRET_KEY')!,
       },
     });
-    this.bucketName = this.configService.get<string>('MINIO_BUCKET') || 'videos';
+    this.bucketName =
+      this.configService.get<string>('MINIO_BUCKET') || 'videos';
   }
 
-  async uploadFile(file: Express.Multer.File, folder: string = 'videos'): Promise<string> {
+  async uploadFile(
+    file: Express.Multer.File,
+    folder: string = 'videos',
+  ): Promise<string> {
     const fileName = `${folder}/${Date.now()}-${file.originalname}`;
 
     try {
@@ -51,7 +60,11 @@ export class StorageService {
     return `http://${this.configService.get('MINIO_ENDPOINT')}:${this.configService.get('MINIO_PORT')}/${this.bucketName}/${key}`;
   }
 
-  async uploadBuffer(buffer: Buffer, fileName: string, mimetype: string): Promise<string> {
+  async uploadBuffer(
+    buffer: Buffer,
+    fileName: string,
+    mimetype: string,
+  ): Promise<string> {
     try {
       await this.s3Client.send(
         new PutObjectCommand({
@@ -61,13 +74,17 @@ export class StorageService {
           ContentType: mimetype,
         }),
       );
-      return fileName
+      return fileName;
     } catch (error) {
-      throw new InternalServerErrorException('Gagal upload thumbnail')
+      throw new InternalServerErrorException('Gagal upload thumbnail');
     }
   }
 
-  async uploadFileFromPath(localPath: string, remoteKey: string, mimetype: string): Promise<string> {
+  async uploadFileFromPath(
+    localPath: string,
+    remoteKey: string,
+    mimetype: string,
+  ): Promise<string> {
     const fileContent = fs.readFileSync(localPath);
     await this.s3Client.send(
       new PutObjectCommand({
@@ -75,8 +92,8 @@ export class StorageService {
         Key: remoteKey,
         Body: fileContent,
         ContentType: mimetype,
-      })
+      }),
     );
-    return remoteKey
+    return remoteKey;
   }
 }

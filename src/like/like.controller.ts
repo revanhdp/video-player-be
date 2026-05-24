@@ -3,8 +3,7 @@ import { LikeService } from './like.service';
 
 @Controller('video/like')
 export class LikeController {
-    // constructor(private readonly likeService: LikeService) {}
-
-    // @Post()
-    // async likeVideo
+  // constructor(private readonly likeService: LikeService) {}
+  // @Post()
+  // async likeVideo
 }

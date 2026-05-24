@@ -34,7 +34,7 @@ export class RegisterDto {
   // @Length(2, 100, {
   //   message: 'Nama minimal 2 karakter dan maksimal 100 karakter',
   // })
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+
   // @Transform((value: any) => (typeof value === 'string' ? value.trim() : value))
 
   // @IsString()

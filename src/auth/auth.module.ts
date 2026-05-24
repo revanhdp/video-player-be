@@ -7,10 +7,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { RtStrategy } from './rt.strategy';
 
 @Module({
-  imports: [
-    PrismaModule,
-    JwtModule.register({}),
-  ],
+  imports: [PrismaModule, JwtModule.register({})],
   providers: [AuthService, JwtStrategy, RtStrategy],
   controllers: [AuthController],
 })

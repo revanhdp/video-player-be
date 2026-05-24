@@ -10,7 +10,7 @@ export class VideoService {
     private prisma: PrismaService,
     private storageService: StorageService,
     @InjectQueue('video-processing') private videoQueue: Queue,
-  ) { }
+  ) {}
 
   async createVideo(file: Express.Multer.File, body: any, userId: string) {
     const { title, description, tags } = body;
@@ -32,18 +32,25 @@ export class VideoService {
         description,
         videoUrl,
         userId,
-        tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map((t: string) => t.trim())) : [],
+        tags: tags
+          ? Array.isArray(tags)
+            ? tags
+            : tags.split(',').map((t: string) => t.trim())
+          : [],
       },
     });
 
     // Add to processing queue
-    await this.videoQueue.add('process-video', {
-      videoId: video.id,
-      videoUrl: video.videoUrl,
-    }, 
-    {
-      attempts: 2,
-    });
+    await this.videoQueue.add(
+      'process-video',
+      {
+        videoId: video.id,
+        videoUrl: video.videoUrl,
+      },
+      {
+        attempts: 2,
+      },
+    );
 
     return video;
   }

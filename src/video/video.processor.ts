@@ -24,7 +24,7 @@ export class VideoProcessor {
   async handleVideoProcessing(job: Job) {
     const { videoId, videoUrl } = job.data;
     const tempDir = join(os.tmpdir(), `hls-${videoId}`);
-    
+
     // Konfigurasi Resolusi (Adaptive Bitrate)
     const resolutions = [
       { name: '360p', width: 640, height: 360, bitrate: '800k' },
@@ -71,7 +71,9 @@ export class VideoProcessor {
             .output(join(resDir, 'index.m3u8'))
             .on('end', resolve)
             .on('error', (err: any) => {
-              this.logger.error(`Error transcoding ${res.name}: ${err.message}`);
+              this.logger.error(
+                `Error transcoding ${res.name}: ${err.message}`,
+              );
               reject(err);
             })
             .run();
@@ -110,7 +112,11 @@ export class VideoProcessor {
             else if (file.endsWith('.ts')) mimetype = 'video/mp2t';
             else if (file.endsWith('.png')) mimetype = 'image/png';
 
-            await this.storageService.uploadFileFromPath(filePath, remoteKey, mimetype);
+            await this.storageService.uploadFileFromPath(
+              filePath,
+              remoteKey,
+              mimetype,
+            );
           }
         }
       };
@@ -118,8 +124,12 @@ export class VideoProcessor {
       await uploadDir(tempDir);
 
       // 5. UPDATE DATABASE
-      const finalVideoUrl = await this.storageService.getFileUrl(`processed/${videoId}/master.m3u8`);
-      const finalThumbnailUrl = await this.storageService.getFileUrl(`processed/${videoId}/thumbnail.png`);
+      const finalVideoUrl = await this.storageService.getFileUrl(
+        `processed/${videoId}/master.m3u8`,
+      );
+      const finalThumbnailUrl = await this.storageService.getFileUrl(
+        `processed/${videoId}/thumbnail.png`,
+      );
 
       await this.prisma.video.update({
         where: { id: videoId },
@@ -132,11 +142,15 @@ export class VideoProcessor {
 
       // 6. CLEANUP
       fs.rmSync(tempDir, { recursive: true, force: true });
-      this.logger.log(`Multi-Resolution Transcoding Selesai! Master URL: ${finalVideoUrl}`);
+      this.logger.log(
+        `Multi-Resolution Transcoding Selesai! Master URL: ${finalVideoUrl}`,
+      );
 
       return { success: true };
     } catch (error) {
-      this.logger.error(`Gagal Multi-Resolution Transcoding ${videoId}: ${error.message}`);
+      this.logger.error(
+        `Gagal Multi-Resolution Transcoding ${videoId}: ${error.message}`,
+      );
       if (fs.existsSync(tempDir)) {
         fs.rmSync(tempDir, { recursive: true, force: true });
       }
