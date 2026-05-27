@@ -46,7 +46,7 @@ describe('CommentController', () => {
         videoId: 'e28bbd91-3829-4d64-8149-a23f7db20163',
         content: 'Cool video!',
       };
-      const req = { user: { userId: 'user-1' } };
+      const req = { user: { userId: 'user-1', email: 'user@example.com', role: 'USER' } };
       const mockResult = {
         id: 'comment-1',
         content: dto.content,
@@ -93,7 +93,7 @@ describe('CommentController', () => {
     it('should call commentService.updateComment and return result', async () => {
       const id = 'comment-1';
       const dto: UpdateCommentDto = { content: 'Updated comment text' };
-      const req = { user: { userId: 'user-1' } };
+      const req = { user: { userId: 'user-1', email: 'user@example.com', role: 'USER' } };
       const mockResult = { id, content: dto.content, userId: 'user-1' };
       mockCommentService.updateComment.mockResolvedValue(mockResult);
 
@@ -114,7 +114,7 @@ describe('CommentController', () => {
   describe('deleteComment', () => {
     it('should call commentService.deleteComment and return result', async () => {
       const id = 'comment-1';
-      const req = { user: { userId: 'user-1', role: 'USER' } };
+      const req = { user: { userId: 'user-1', email: 'user@example.com', role: 'USER' } };
       const mockResult = { id };
       mockCommentService.deleteComment.mockResolvedValue(mockResult);
 
