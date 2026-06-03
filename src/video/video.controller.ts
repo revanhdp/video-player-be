@@ -9,14 +9,24 @@ import {
   UseGuards,
   UseInterceptors,
   Delete,
+  BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { VideoService } from './video.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
-import { type Request } from 'express';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
+import { CreateVideoDto } from './dto/create-video.dto';
+
+interface RequestWithUser {
+  user: {
+    userId: string;
+    email: string;
+    role: string;
+  };
+}
 
 @Controller('video')
 export class VideoController {
@@ -34,28 +44,29 @@ export class VideoController {
         callback(null, true);
       },
       limits: {
-        fileSize: 1024 * 1024 * 100,
+        fileSize: 1024 * 1024 * 100, // 100MB limit
       },
     }),
   )
   async uploadVideo(
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: any,
-    @Req() req: Request,
+    @Body() body: CreateVideoDto,
+    @Req() req: RequestWithUser,
   ) {
-    const user = req.user as any;
-    return this.videoService.createVideo(file, body, user.userId);
+    if (!file) {
+      throw new BadRequestException('Video file is required');
+    }
+    return this.videoService.createVideo(file, body, req.user.userId);
   }
 
   @Get(':id')
-  async getVideo(@Param('id') id: string) {
+  async getVideo(@Param('id', ParseUUIDPipe) id: string) {
     return this.videoService.findOne(id);
   }
 
   @Get()
   async getAllVideo() {
     const data = await this.videoService.findAll();
-
     const total = data.length;
 
     return {
@@ -66,8 +77,12 @@ export class VideoController {
   }
 
   @Delete(':id')
-  async deleteVideo(@Param('id') id: string) {
-    await this.videoService.deleteVideo(id);
+  @UseGuards(AuthGuard('jwt'))
+  async deleteVideo(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: RequestWithUser,
+  ) {
+    await this.videoService.deleteVideo(id, req.user.userId, req.user.role);
 
     return {
       message: 'Video berhasil dihapus',

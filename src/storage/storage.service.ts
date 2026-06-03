@@ -4,6 +4,9 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as fs from 'fs';
@@ -95,5 +98,66 @@ export class StorageService {
       }),
     );
     return remoteKey;
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    try {
+      await this.s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucketName,
+          Key: key,
+        }),
+      );
+    } catch (error) {
+      console.error(`Gagal menghapus file ${key} dari MinIO:`, error);
+    }
+  }
+
+  async deleteFileByUrl(url: string): Promise<void> {
+    const key = this.extractKeyFromUrl(url);
+    if (key) {
+      await this.deleteFile(key);
+    }
+  }
+
+  async deleteFolder(prefix: string): Promise<void> {
+    try {
+      // Pastikan prefix memiliki '/' di akhir agar tidak mencocokkan folder lain (misal processed/12 vs processed/123)
+      const folderPrefix = prefix.endsWith('/') ? prefix : `${prefix}/`;
+
+      const listCommand = new ListObjectsV2Command({
+        Bucket: this.bucketName,
+        Prefix: folderPrefix,
+      });
+      const listedObjects = await this.s3Client.send(listCommand);
+
+      if (!listedObjects.Contents || listedObjects.Contents.length === 0) {
+        return;
+      }
+
+      const deleteParams = {
+        Bucket: this.bucketName,
+        Delete: {
+          Objects: listedObjects.Contents.map(({ Key }) => ({ Key })),
+        },
+      };
+
+      await this.s3Client.send(new DeleteObjectsCommand(deleteParams));
+
+      if (listedObjects.IsTruncated) {
+        await this.deleteFolder(prefix);
+      }
+    } catch (error) {
+      console.error(`Gagal menghapus folder ${prefix} dari MinIO:`, error);
+    }
+  }
+
+  private extractKeyFromUrl(url: string): string | null {
+    const bucketMarker = `/${this.bucketName}/`;
+    const index = url.indexOf(bucketMarker);
+    if (index !== -1) {
+      return url.substring(index + bucketMarker.length);
+    }
+    return null;
   }
 }

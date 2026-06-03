@@ -146,6 +146,9 @@ export class VideoProcessor {
         `Multi-Resolution Transcoding Selesai! Master URL: ${finalVideoUrl}`,
       );
 
+      // Hapus file video mentah (raw video) dari MinIO untuk menghemat kapasitas storage
+      await this.storageService.deleteFileByUrl(videoUrl);
+
       return { success: true };
     } catch (error) {
       this.logger.error(

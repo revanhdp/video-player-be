@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
+import { CreateVideoDto } from './dto/create-video.dto';
 
 @Injectable()
 export class VideoService {
@@ -12,7 +13,7 @@ export class VideoService {
     @InjectQueue('video-processing') private videoQueue: Queue,
   ) {}
 
-  async createVideo(file: Express.Multer.File, body: any, userId: string) {
+  async createVideo(file: Express.Multer.File, body: CreateVideoDto, userId: string) {
     const { title, description, tags } = body;
 
     // Simple slug generator
@@ -69,7 +70,7 @@ export class VideoService {
   }
 
   async findOne(id: string) {
-    return await this.prisma.video.findUnique({
+    const video = await this.prisma.video.findUnique({
       where: { id },
       include: {
         user: {
@@ -81,9 +82,39 @@ export class VideoService {
         comments: true,
       },
     });
+
+    if (!video) {
+      throw new NotFoundException(`Video dengan ID ${id} tidak ditemukan`);
+    }
+
+    return video;
   }
 
-  async deleteVideo(id: string) {
+  async deleteVideo(id: string, userId: string, userRole: string) {
+    const video = await this.prisma.video.findUnique({
+      where: { id },
+    });
+
+    if (!video) {
+      throw new NotFoundException(`Video dengan ID ${id} tidak ditemukan`);
+    }
+
+    const isOwner = video.userId === userId;
+    const isAdmin = userRole === 'ADMIN';
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException(
+        `Anda tidak memiliki izin untuk menghapus video ini`,
+      );
+    }
+
+    // 1. Hapus semua file terkait di MinIO
+    // Jika masih dalam status PROCESSING, URL menunjuk ke raw video.
+    // Jika sudah PUBLISHED, URL menunjuk ke master HLS. Kita bersihkan foldernya.
+    await this.storageService.deleteFileByUrl(video.videoUrl);
+    await this.storageService.deleteFolder(`processed/${id}`);
+
+    // 2. Hapus data dari database
     return await this.prisma.video.delete({
       where: { id },
     });
