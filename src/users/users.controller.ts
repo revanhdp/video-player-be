@@ -18,7 +18,7 @@ import { UserRole } from '@prisma/client';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   // @Post()
   // async create(@Body() createUser: CreateUserDto) {

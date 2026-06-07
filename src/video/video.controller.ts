@@ -30,7 +30,7 @@ interface RequestWithUser {
 
 @Controller('video')
 export class VideoController {
-  constructor(private readonly videoService: VideoService) {}
+  constructor(private readonly videoService: VideoService) { }
 
   @Post('upload')
   @UseGuards(AuthGuard('jwt'), RolesGuard)

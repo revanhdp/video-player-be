@@ -11,7 +11,7 @@ export class VideoService {
     private prisma: PrismaService,
     private storageService: StorageService,
     @InjectQueue('video-processing') private videoQueue: Queue,
-  ) {}
+  ) { }
 
   async createVideo(file: Express.Multer.File, body: CreateVideoDto, userId: string) {
     const { title, description, tags } = body;
@@ -79,7 +79,27 @@ export class VideoService {
             email: true,
           },
         },
-        comments: true,
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 10,
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
       },
     });
 
