@@ -16,6 +16,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  // Register
   async register(dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -38,6 +39,7 @@ export class AuthService {
     return this.getTokens(newUser.id, newUser.email, newUser.role);
   }
 
+  // Login
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -55,10 +57,12 @@ export class AuthService {
     return this.getTokens(user.id, user.email, user.role);
   }
 
+  // Logout
   async logout(userId: string) {
     return { message: 'Logged out successfully' };
   }
 
+  // Refresh Tokens
   async refreshTokens(userId: string, email: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -70,7 +74,8 @@ export class AuthService {
 
     return this.getTokens(userId, email, user.role);
   }
-
+  
+  // Get Tokens
   async getTokens(userId: string, email: string, role: string) {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
